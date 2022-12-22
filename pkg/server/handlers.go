@@ -26,6 +26,24 @@ func responseTypeMiddleware(w http.ResponseWriter, request *http.Request) {
 
 func HandlerWrap(middlewares []http.HandlerFunc, handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			r := recover()
+			if r != nil {
+				var err error
+				switch t := r.(type) {
+				case string:
+					err = errors.New(t)
+				case error:
+					err = t
+				default:
+					err = errors.New("unknown error")
+				}
+				log.Printf("panic: %s", err.Error())
+				w.Write([]byte(err.Error()))
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+		}()
+
 		for _, h := range middlewares {
 			h(w, r)
 		}
