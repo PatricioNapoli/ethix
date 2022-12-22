@@ -2,13 +2,13 @@ package utils
 
 import (
 	"io/ioutil"
-	"testing"
+	"log"
 )
 
-func ReadTestFile(t *testing.T, inputFile string) []byte {
+func ReadFile(inputFile string) []byte {
 	input, err := ioutil.ReadFile(inputFile)
 	if err != nil {
-		t.Errorf("could not open test file. details: %v", err)
+		log.Printf("could not open file. details: %v", err)
 	}
 
 	return input

@@ -1,5 +1,7 @@
 package indexer
 
+import "encoding/json"
+
 type Transaction struct {
 	Gas                  string        `json:"gas"`
 	Hash                 string        `json:"hash"`
@@ -20,4 +22,19 @@ type Transaction struct {
 	V                    string        `json:"v"`
 	R                    string        `json:"r"`
 	S                    string        `json:"s"`
+}
+
+func (t *Transaction) UnmarshalJSON(data []byte) error {
+	type _Transaction Transaction
+	test := &_Transaction{
+		AccessList: []interface{}{},
+	}
+
+	err := json.Unmarshal(data, test)
+	if err != nil {
+		return err
+	}
+
+	*t = Transaction(*test)
+	return nil
 }

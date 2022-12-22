@@ -29,9 +29,6 @@ type Indexer struct {
 }
 
 func New(endpoint string, addressesDb *store.Database[string], transactionsDb *store.Database[[]Transaction]) *Indexer {
-	// TODO: create coroutine that checks if current block changed and if it did, send an RPC request of current block
-	//       number transactions, then find matches out or in with addresses db, and add them to transactions db.
-
 	idxr := &Indexer{
 		RpcEndpoint:    endpoint,
 		AddressesDb:    addressesDb,
@@ -70,14 +67,19 @@ func (i *Indexer) index() {
 		return
 	}
 
-	tempIndex := map[string]Transaction{}
+	tempIndex := map[string][]Transaction{}
 
 	r := res[0].Result
 	txns := r.Transactions
 
 	for _, txn := range txns {
-		tempIndex[txn.From] = txn
-		tempIndex[txn.To] = txn
+		txnsArr := tempIndex[txn.From]
+		txnsArr = append(txnsArr, txn)
+		tempIndex[txn.From] = txnsArr
+
+		txnsArr = tempIndex[txn.To]
+		txnsArr = append(txnsArr, txn)
+		tempIndex[txn.From] = txnsArr
 	}
 
 	addressesTable := (*i.AddressesDb).ReadOrCreate("eth_addresses")
@@ -86,9 +88,11 @@ func (i *Indexer) index() {
 
 	for k, _ := range addressesTable.Data {
 		if txn, exists := tempIndex[k]; exists {
+			log.Printf("found transactions for address: %s", k)
+
 			txnTable := (*i.TransactionsDb).ReadOrCreate("eth_transactions")
 			txnList := txnTable.Get(k)
-			txnList = append(txnList, txn)
+			txnList = append(txnList, txn...)
 			txnTable.Set(k, txnList)
 		}
 	}
