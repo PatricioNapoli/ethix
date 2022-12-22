@@ -63,10 +63,6 @@ Or run the scripts in `scripts/`.
 
 `docker run -p 8080:8080 ghcr.io/patricionapoli/ethix:master`
 
-#### Testing
-
-`docker run ghcr.io/patricionapoli/ethix:master /ethix/scripts/test.sh`  
-
 ## Usage
 
 Port used is 8080. You may use Curl for testing.
